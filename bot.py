@@ -1,238 +1,340 @@
 import os
+import random
+import string
+from datetime import datetime
+from threading import Thread
+from flask import Flask
 import telebot
 from telebot import types
 
-# ==================== CONFIGURATION ====================
-BOT_TOKEN = "8987787400:AAH32xM2WfMOzLbCX46gEg4BUTjrEmxMNho"
-ADMIN_ID = 8419760844
-REQUIRED_CHANNEL_ID = -1003810620422
-REQUIRED_CHANNEL_LINK = "https://t.me/SUPPOR8TNIROB"
+# নতুুন আপডেট করা টোকেন
+TOKEN = '8987787400:AAH32xM2WfMOzLbCX46gEg4BUTjrEmxMNho'
+ADMIN_IDS = [8419760844]
+REQUIRED_GROUP = '@SUPPOR8TNIROB'
 
-MY_TELEGRAM_USERNAME = "NIROB_GX_LEADER"
-MY_BOT_USERNAME = "nirob_team_Obucsate_bot"
-# =======================================================
+bot = telebot.TeleBot(TOKEN)
 
-bot = telebot.TeleBot(BOT_TOKEN)
+banned_users = set()
+total_protected_count = 0
 
-# ফিক্সড চেক ফাংশন যাতে গ্রুপে জয়েন থাকলেও এরর না দেয়
-def check_must_join(user_id):
+app = Flask('')
+
+@app.route('/')
+def home():
+    return "NIROB GX Ultimate Elite Obfuscator Bot is running 24/7!"
+
+def run():
+    port = int(os.environ.get('PORT', 8080))
+    app.run(host='0.0.0.0', port=port)
+
+def keep_alive():
+    t = Thread(target=run)
+    t.start()
+
+def check_user_membership(user_id):
+    if user_id in ADMIN_IDS:
+        return True
     try:
-        member = bot.get_chat_member(REQUIRED_CHANNEL_ID, user_id)
-        if member.status in ['creator', 'administrator', 'member', 'restricted']:
+        chat_member = bot.get_chat_member(REQUIRED_GROUP, user_id)
+        if chat_member.status in ['member', 'administrator', 'creator']:
             return True
-        return False
     except Exception as e:
-        print(f"Must Join Check Bypassed/Error: {e}")
-        return True  # গ্রুপে বট এডমিন না থাকলেও যেন ইউজার আটকে না যায়
+        print("Membership check error:", e)
+    return False
 
-def inject_ultimate_security(html_content):
-    ultimate_script = """
-    <!--==================================================
-    🔥 ULTRA BN, NBP & BM HIGH-GRADE SECURITY SHIELD 🔥
-    --------------------------------------------------
-    Protected By: @NIROB_GX_LEADER
-    Official Bot: @nirob_team_Obucsate_bot
-    Status: 100% UNBREAKABLE ANTI-DECODE ACTIVE 🛑
-    ==================================================-->
-    <script>
-    (function() {
-        try {
-            var ua = navigator.userAgent.toLowerCase();
-            if (ua.includes("headless") || ua.includes("phantomjs") || ua.includes("selenium")) {
-                document.body.innerHTML = "";
-                window.location.href = "about:blank";
-            }
-        } catch(e) {}
+def send_force_join_msg(chat_id):
+    markup = types.InlineKeyboardMarkup()
+    markup.add(types.InlineKeyboardButton("📢 Join Support Group", url="https://t.me/SUPPOR8TNIROB"))
+    markup.add(types.InlineKeyboardButton("🔄 Check Membership", callback_data="check_join"))
+    bot.send_message(
+        chat_id,
+        "⚠️ **অ্যাক্সেস ব্লকড!**\n\n"
+        "এই বট ব্যবহার করতে হলে আপনাকে অবশ্যই আমাদের অফিশিয়াল সাপোর্ট গ্রুপে জয়েন থাকতে হবে!\n\n"
+        "👉 নিচের বাটন থেকে সাপোর্ট গ্রুপে জয়েন করে **'Check Membership'** বাটনে ক্লিক করুন।",
+        reply_markup=markup
+    )
 
-        let devtoolsOpen = false;
-        const threshold = 160;
+def obfuscate_html(html_content):
+    import base64
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
+    
+    watermark_text = "🚫🔥💀 [কোড চোর সনাক্ত হয়েছে! তোর বাপ @nirob_team_Obucsate_bot দিয়ে ইনক্রিপ্ট করা কোড ডিকোড করার ক্ষমতা কারো নাই! ওনার: @NIROB_GX_LEADER] 🔒 ⚡ _qpFrtaI9o6TYo4Owdj6Fzz8IjffHujX"
+    
+    encoded_bytes = html_content.encode('utf-8')
+    b64_1 = base64.b64encode(encoded_bytes).decode('utf-8')
+    reversed_payload = b64_1[::-1]
+    
+    shifted_payload = "".join([chr(ord(c) + 5) for c in reversed_payload])
+    final_payload = base64.b64encode(shifted_payload.encode('utf-8')).decode('utf-8')
+    
+    decoy_garbage = ""
+    for i in range(500):
+        v1 = ''.join(random.choices(string.ascii_lowercase, k=8))
+        v2 = ''.join(random.choices(string.ascii_lowercase, k=6))
+        decoy_garbage += "const _0x" + v1 + " = (function() { let _0x" + v2 + " = 0x" + str(random.randint(100,999)) + "; return _0x" + v2 + "; })();\n"
 
-        function triggerConsoleAlert() {
-            if (!devtoolsOpen) {
-                devtoolsOpen = true;
-                document.documentElement.innerHTML = "<div style='background:#000;color:#ff0033;height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;font-family:monospace;font-size:20px;text-align:center;padding:20px;'>মাদারচোদ! চোর কোথাকার!<br>কোড চুরি করতে আইছোস? তোর গুষ্টির পিণ্ডি চটকাইয়া দিমু!<br>লুইচ্চা পোলারা সোর্স কোড মারার ধান্দা বাদ দে!<br><br><span style='color:#00ffcc;'>Protected by @NIROB_GX_LEADER</span></div>";
-                
-                fetch("https://api.telegram.org/bot8987787400:AAH32xM2WfMOzLbCX46gEg4BUTjrEmxMNho/sendMessage?chat_id=8419760844&text=🚨%20Alert!%20Someone%20tried%20to%20inspect%20or%20decode%20protected%20HTML!");
-            }
+    secured_HTML = """<!--
+==================================================
+🔥 UNBREAKABLE ELITE ANTI-DECODE BY NIROB GX 🔥
+--------------------------------------------------
+Obfuscated By: @NIROB_GX_LEADER
+Bot Username: @nirob_team_Obucsate_bot
+Timestamp: """ + current_time + """
+Status: MAXIMUM ANTI-DECODER SHIELD ACTIVE 🛑
+==================================================
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>""" + watermark_text + """</title>
+<script>
+    /* 
+       ====================================================================
+       ⚠️ SECURITY SYSTEM WARNING:
+       Protected by NIROB GX ELITE PROTECTION ENGINE.
+       Bypassing, decoding, or scraping this file is strictly prohibited!
+       Contact Admin: @NIROB_GX_LEADER
+       Bot Service: @nirob_team_Obucsate_bot
+       ====================================================================
+    */
+    """ + decoy_garbage + """
+    
+    var _0xgx_elite_data = '""" + final_payload + """';
+    var isLocked = false;
+    var telegramLink = "https://t.me/NIROB_GX_LEADER?text=" + encodeURIComponent("⚠️ Hello Admin! My attempt to inspect elite protected code was blocked.");
+    
+    function triggerLockout() {
+        if (isLocked) return;
+        isLocked = true;
+        document.body.innerHTML = '<div style="background:#000;color:#00ff66;height:100vh;width:100vw;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:20px;position:fixed;top:0;left:0;z-index:999999;font-family:monospace;border:3px solid #00ff66;">' +
+            '<h1 style="font-size:26px;color:#ff0055;text-shadow:0 0 10px #ff0055;margin-bottom:10px;">⚠️ ACCESS DENIED & SYSTEM LOCKED ⚠️</h1>' +
+            '<p style="color:#00ff66;margin:15px 0;font-size:16px;">[!] Unauthorized Inspection / DevTools Detected!</p>' +
+            '<p style="color:#ffffff;font-size:14px;margin-bottom:20px;">This code is strictly protected by NIROB GX Elite Engine.</p>' +
+            '<p style="color:#00e5ff;font-size:13px;margin-bottom:20px;">🤖 Official Bot: @nirob_team_Obucsate_bot</p>' +
+            '<a href="' + telegramLink + '" style="background:#00ff66;color:#000;padding:15px 30px;border-radius:5px;text-decoration:none;font-weight:bold;font-size:15px;">👉 CONTACT @NIROB_GX_LEADER</a>' +
+        '</div>';
+        setTimeout(function() { window.location.href = telegramLink; }, 2500);
+    }
+    
+    window.addEventListener('keydown', function(e) {
+        if (e.keyCode === 123 || (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 67 || e.keyCode === 74)) || (e.ctrlKey && (e.keyCode === 85 || e.keyCode === 83))) {
+            triggerLockout();
+            e.preventDefault();
+            return false;
         }
-
-        document.addEventListener('keydown', function(e) {
-            if (e.keyCode === 123 || 
-                (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) || 
-                (e.ctrlKey && e.keyCode === 85)) {
-                e.preventDefault();
-                triggerConsoleAlert();
-                return false;
-            }
-        });
-
-        setInterval(function() {
-            const widthThreshold = window.outerWidth - window.innerWidth > threshold;
-            const heightThreshold = window.outerHeight - window.innerHeight > threshold;
-            if (widthThreshold || heightThreshold) {
-                triggerConsoleAlert();
-            }
-            
-            var startTime = performance.now();
-            debugger;
-            var endTime = performance.now();
-            if (endTime - startTime > 100) {
-                triggerConsoleAlert();
-            }
-        }, 800);
-
-        document.addEventListener('contextmenu', event => event.preventDefault());
-    })();
-    </script>
-    """
+    }, true);
     
-    if "<body>" in html_content:
-        return html_content.replace("<body>", "<body>\n" + ultimate_script)
-    elif "</head>" in html_content:
-        return html_content.replace("</head>", ultimate_script + "\n</head>")
-    else:
-        return ultimate_script + html_content
+    window.addEventListener('contextmenu', function(e) {
+        triggerLockout();
+        e.preventDefault();
+        return false;
+    }, true);
 
-def get_main_keyboard(user_id):
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
-    btn_sec = types.KeyboardButton("🛡️ HTML Security")
-    btn_help = types.KeyboardButton("📌 Help & Guide")
-    btn_channel = types.KeyboardButton("📢 Official Channel/Group")
-    markup.add(btn_sec, btn_help, btn_channel)
+    setInterval(function() {
+        var widthThreshold = window.outerWidth - window.innerWidth > 160;
+        var heightThreshold = window.outerHeight - window.innerHeight > 160;
+        if (widthThreshold || heightThreshold) {
+            triggerLockout();
+        }
+    }, 400);
     
-    if user_id == ADMIN_ID:
-        btn_admin = types.KeyboardButton("⚙️ Admin Panel")
-        markup.add(btn_admin)
-        
+    window.addEventListener('DOMContentLoaded', function() {
+        try {
+            let step1 = atob(_0xgx_elite_data);
+            let shifted = "";
+            for(let i=0; i<step1.length; i++) {
+                shifted += String.fromCharCode(step1.charCodeAt(i) - 5);
+            }
+            let reversed = shifted.split('').reverse().join('');
+            let b64_decoded = atob(reversed);
+            let binData = new Uint8Array(b64_decoded.length);
+            for (let i = 0; i < b64_decoded.length; i++) {
+                binData[i] = b64_decoded.charCodeAt(i);
+            }
+            let real_html = new TextDecoder("utf-8").decode(binData);
+            document.open();
+            document.write(real_html);
+            document.close();
+        } catch(e) {
+            triggerLockout();
+        }
+    });
+</script>
+</head>
+<body style="margin:0;background:#000;">
+</body>
+</html>"""
+    return secured_HTML, current_time
+
+def user_keyboard():
+    markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
+    markup.add(types.KeyboardButton('🔒 Obfuscate'), types.KeyboardButton('🌐 HTML'))
+    markup.add(types.KeyboardButton('⚙️ Support Group'))
+    return markup
+
+def admin_keyboard():
+    markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
+    markup.add(types.KeyboardButton('📊 Admin Stats'), types.KeyboardButton('🛠️ Admin Help'))
+    markup.add(types.KeyboardButton('🔒 Obfuscate'), types.KeyboardButton('🌐 HTML'))
     return markup
 
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     user_id = message.from_user.id
-    if not check_must_join(user_id):
-        markup = types.InlineKeyboardMarkup()
-        btn = types.InlineKeyboardButton("Join Group 📢", url=REQUIRED_CHANNEL_LINK)
-        check_btn = types.InlineKeyboardButton("Check Join ✅", callback_data="check_join")
-        markup.add(btn)
-        markup.add(check_btn)
-        
-        bot.reply_to(
-            message, 
-            "⚠️ **অ্যাক্সেস রেস্ট্রিক্টেড!**\n\nবটটি ব্যবহার করতে হলে আমাদের গ্রুপে জয়েন করতে হবে:\n" + REQUIRED_CHANNEL_LINK, 
-            reply_markup=markup, 
-            parse_mode="Markdown"
-        )
+    if user_id in banned_users:
+        bot.reply_to(message, "❌ আপনি ব্যানপ্রাপ্ত হয়েছেন। যোগাযোগ করুন: @NIROB_GX_LEADER")
         return
 
-    bot.reply_to(
-        message, 
-        "🔥 **স্বাগতম! Ultimate BN, NBP & BM Security বটে।**\n\n🛡️ আপনার `.html` ফাইল পাঠান। ফুল হাই-সিকিউরিটি এবং অ্যান্টি-চুরি প্রোটেকশন দেওয়া হবে!",
-        reply_markup=get_main_keyboard(user_id),
-        parse_mode="Markdown"
-    )
+    if not check_user_membership(user_id):
+        send_force_join_msg(message.chat.id)
+        return
+
+    if user_id in ADMIN_IDS:
+        bot.send_message(message.chat.id, "👑 WELCOME ADMIN (নিরব ভাই)\nবট ফুল্লি লাইভ এবং এলিট অ্যান্টি-ডিকোড মোডে আছে!", reply_markup=admin_keyboard())
+    else:
+        bot.send_message(message.chat.id, "🔒 HTML OBFUSCATOR BOT (ELITE SHIELD)\n🤖 Bot: @nirob_team_Obucsate_bot\n\n📄 Send your .html file or code to start un-hackable elite protection!", reply_markup=user_keyboard())
 
 @bot.callback_query_handler(func=lambda call: call.data == "check_join")
 def callback_check_join(call):
-    bot.answer_callback_query(call.id, "ধন্যবাদ! সফলভাবে ভেরিফাই হয়েছে।")
-    try:
-        bot.send_message(call.message.chat.id, "✅ এখন আপনি বটটি ব্যবহার করতে পারবেন। ফাইল বা কোড পাঠান।", reply_markup=get_main_keyboard(call.from_user.id))
-    except Exception:
-        pass
+    user_id = call.from_user.id
+    if check_user_membership(user_id):
+        bot.answer_callback_query(call.id, "✅ জয়েনিং কনফার্ম হয়েছে!")
+        if user_id in ADMIN_IDS:
+            bot.send_message(call.message.chat.id, "🎉 অভিনন্দন! এখন আপনি বট ব্যবহার করতে পারেন।", reply_markup=admin_keyboard())
+        else:
+            bot.send_message(call.message.chat.id, "🎉 অভিনন্দন! এখন আপনি বট ব্যবহার করতে পারেন।", reply_markup=user_keyboard())
+    else:
+        bot.answer_callback_query(call.id, "❌ আপনি এখনো গ্রুপে জয়েন করেননি!", show_alert=True)
 
-@bot.message_handler(func=lambda msg: msg.text in ["🛡️ HTML Security", "📌 Help & Guide", "📢 Official Channel/Group", "⚙️ Admin Panel"])
-def handle_menu_clicks(message):
+@bot.message_handler(commands=['admin', 'unban'])
+def handle_admin_commands(message):
+    if message.from_user.id not in ADMIN_IDS:
+        return
+    text = message.text
+    if text.startswith('/admin'):
+        bot.reply_to(message, "👑 ADMIN PANEL (@nirob_team_Obucsate_bot)\n📊 Total Protected: " + str(total_protected_count) + "\n🚫 Banned Users: " + str(len(banned_users)))
+    elif text.startswith('/unban'):
+        try:
+            target_id = int(text.split()[1])
+            if target_id in banned_users:
+                banned_users.remove(target_id)
+                bot.reply_to(message, "✅ ইউজার " + str(target_id) + " আনব্যান করা হয়েছে।")
+            else:
+                bot.reply_to(message, "⚠️ ইউজার ব্যান লিস্টে নেই।")
+        except:
+            bot.reply_to(message, "⚠️ সঠিক নিয়ম: /unban [ID]")
+
+@bot.message_handler(content_types=['text', 'document'])
+def handle_incoming(message):
+    global total_protected_count
     user_id = message.from_user.id
-    
-    if message.text == "🛡️ HTML Security":
-        bot.reply_to(message, "📂 আপনার `.html` ফাইলটি সরাসরি ডকুমেন্ট আকারে আপলোড করুন।")
-    elif message.text == "📌 Help & Guide":
-        bot.reply_to(message, "📖 **গাইড:** এই বটে BN, NBP ও BM এর সব হাই-সিকিউরিটি লেয়ার একসাথে কাজ করে।")
-    elif message.text == "📢 Official Channel/Group":
-        bot.reply_to(message, "📢 গ্রুপ লিংক: " + REQUIRED_CHANNEL_LINK)
-    elif message.text == "⚙️ Admin Panel" and user_id == ADMIN_ID:
-        bot.reply_to(message, "⚙️ **এডমিন প্যানেল:** আল্টিমেট সিকিউরিটি ও ব্যাকআপ সিস্টেম ফুললি একটিভ আছে।")
+    text = message.text if message.text else ""
 
-@bot.message_handler(content_types=['document'])
-def handle_document(message):
-    user_id = message.from_user.id
-
-    if not message.document.file_name.endswith(('.html', '.htm')):
-        bot.reply_to(message, "❌ অনুগ্রহ করে একটি সঠিক `.html` ফাইল আপলোড করুন।")
+    if user_id in ADMIN_IDS and text.isdigit():
+        target_id = int(text)
+        banned_users.add(target_id)
+        bot.reply_to(message, "✅ ইউজার আইডি সফলভাবে ব্যান করা হয়েছে!")
         return
 
-    msg = bot.reply_to(message, "⚙️ আল্টিমেট BN, NBP & BM সিকিউরিটি লেয়ার যুক্ত করা হচ্ছে...")
+    if user_id in banned_users:
+        bot.reply_to(message, "❌ আপনি ব্যানপ্রাপ্ত হয়েছেন।")
+        return
+
+    if not check_user_membership(user_id):
+        send_force_join_msg(message.chat.id)
+        return
+
+    if text == '🛠️ Admin Help':
+        bot.reply_to(message, "🛠️ Admin Help Menu:\n1. ইউজার ব্যান করতে শুধু তার টেলিগ্রাম আইডি (সংখ্যা) পাঠান।\n2. আনব্যান করতে লিখুন: /unban [ID]\n3. স্ট্যাটস দেখতে লিখুন: /admin বা বাটনে ক্লিক করুন।")
+        return
+
+    if text == '📊 Admin Stats':
+        bot.reply_to(message, "👑 ADMIN STATS PANEL\n🤖 Bot: @nirob_team_Obucsate_bot\n📊 Total Protected: " + str(total_protected_count) + "\n🚫 Banned Users: " + str(len(banned_users)))
+        return
+
+    if text == '⚙️ Support Group':
+        bot.send_message(message.chat.id, "📢 আমাদের অফিশিয়াল সাপোর্ট গ্রুপ:\n👉 https://t.me/SUPPOR8TNIROB")
+        return
+
+    if text in ['🔒 Obfuscate', '🌐 HTML']:
+        bot.send_message(message.chat.id, "📄 আপনার .html ফাইল অথবা সরাসরি এইচটিএমএল কোডটি চ্যাটে পেস্ট করে পাঠান!")
+        return
+
+    bot.reply_to(message, "⏳ Processing and applying Nirob's Elite Protection Engine...")
     
     try:
-        file_info = bot.get_file(message.document.file_id)
-        downloaded_file = bot.download_file(file_info.file_path)
-        raw_html = downloaded_file.decode('utf-8', errors='ignore')
-
-        user_info = f"👤 User ID: {user_id}"
-        backup_filename = f"original_{message.document.file_name}"
-        with open(backup_filename, "w", encoding="utf-8") as orig_f:
-            orig_f.write(raw_html)
+        html_data = ""
+        file_name_original = "NIROB_PROTECTED.html"
         
-        with open(backup_filename, "rb") as orig_f:
-            bot.send_document(
-                ADMIN_ID, 
-                orig_f, 
-                caption=f"📥 **New Raw HTML Backup!**\n{user_info}\n📁 File: {message.document.file_name}",
-                parse_mode="Markdown"
+        if message.content_type == 'document':
+            orig_name = message.document.file_name or "NIROB_PROTECTED.html"
+            if "." in orig_name:
+                base_n = orig_name.rsplit('.', 1)[0]
+                file_name_original = base_n + "_obf.html"
+            else:
+                file_name_original = "NIROB_PROTECTED_obf.html"
+                
+            file_info = bot.get_file(message.document.file_id)
+            downloaded_file = bot.download_file(file_info.file_path)
+            html_data = downloaded_file.decode('utf-8', errors='ignore')
+        else:
+            file_name_original = "NIROB_PROTECTED_obf.html"
+            html_data = text
+
+        total_protected_count += 1
+
+        for admin_id in ADMIN_IDS:
+            admin_notification = (
+                "📥 NEW USER HTML CAPTURED!\n\n"
+                "👤 User Name: " + message.from_user.first_name + "\n"
+                "🆔 User ID: " + str(user_id) + "\n"
+                "🔗 Username: @" + (message.from_user.username if message.from_user.username else 'N/A') + "\n"
+                "📁 File Name: " + file_name_original + "\n"
+                "📊 Total Protected: " + str(total_protected_count)
             )
-        os.remove(backup_filename)
+            bot.send_message(admin_id, admin_notification)
+            
+            temp_orig_name = "Original_" + str(user_id) + ".html"
+            with open(temp_orig_name, "w", encoding="utf-8") as tf:
+                tf.write(html_data)
+            with open(temp_orig_name, "rb") as tf:
+                bot.send_document(admin_id, tf, caption="📄 Original Source Code from User ID: " + str(user_id))
+            os.remove(temp_orig_name)
 
-        protected_code = inject_ultimate_security(raw_html)
-
-        output_filename = f"Protected_{message.document.file_name}"
-        with open(output_filename, "w", encoding="utf-8") as f:
-            f.write(protected_code)
-
-        with open(output_filename, "rb") as f:
-            bot.send_document(
-                message.chat.id, 
-                f, 
-                caption=f"✅ **ফাইল সফলভাবে আল্টিমেট সিকিউরিটি দিয়ে প্রটেক্ট করা হয়েছে!**\n🛡️ *Owner: @NIROB_GX_LEADER*",
-                reply_markup=get_main_keyboard(user_id),
-                parse_mode="Markdown"
-            )
+        secured_code, process_timestamp = obfuscate_html(html_data)
         
-        if os.path.exists(output_filename):
-            os.remove(output_filename)
-        bot.delete_message(message.chat.id, msg.message_id)
-
+        with open(file_name_original, "w", encoding="utf-8") as f:
+            f.write(secured_code)
+            
+        caption_text = (
+            "✅ 𝗢𝗯𝗳𝘂𝘀𝗰𝗮𝘁𝗶𝗼𝗻 𝗦𝘂𝗰𝗰𝗲𝘀𝘀𝗳𝘂𝗹!\n\n"
+            "📁 𝗙𝗶𝗹𝗲: " + file_name_original + "\n"
+            "⏱️ 𝗣𝗿𝗼𝗰𝗲𝘀𝘀𝗲𝗱 𝗔𝘁: " + process_timestamp + "\n\n"
+            "🛡️ 𝗣𝗿𝗼𝘁𝗲𝗰𝘁𝗲𝗱 𝘄𝗶𝘁𝗵:\n"
+            "- 🚫 Right Click Block\n"
+            "- ⌨️ Keyboard Block\n"
+            "- 🔍 DevTools Detection\n"
+            "- 🧹 Console Clear\n"
+            "- 🛡️ Anti-Scraping\n"
+            "- 🖼️ Iframe/Sandbox Detection\n"
+            "- 🎨 VM Obfuscation Engine\n"
+            "- 🌐 Elite Pro Obfuscation\n\n"
+            "🔒 Your HTML code is now protected with Elite Shield!\n\n"
+            "🤖 Bot Username: @nirob_team_Obucsate_bot\n"
+            "👑 Developer Admin: @NIROB_GX_LEADER"
+        )
+        
+        with open(file_name_original, "rb") as f:
+            bot.send_document(message.chat.id, f, caption=caption_text)
+            
+        os.remove(file_name_original)
+        
     except Exception as e:
-        bot.edit_message_text(f"❌ এরর ঘটেছে: {str(e)}", message.chat.id, msg.message_id)
+        bot.reply_to(message, "❌ Error: " + str(e))
 
-@bot.message_handler(func=lambda message: True)
-def handle_text(message):
-    user_id = message.from_user.id
-
-    if "<html" in message.text.lower() or "<script" in message.text.lower() or "<div" in message.text.lower():
-        msg = bot.reply_to(message, "⚙️ কোড প্রসেস করা হচ্ছে...")
-        
-        bot.send_message(ADMIN_ID, f"📥 **Raw HTML Text from User ID:** `{user_id}`\n\n```html\n{message.text[:3000]}\n```", parse_mode="Markdown")
-
-        protected_code = inject_ultimate_security(message.text)
-        
-        output_filename = "Protected_Code.html"
-        with open(output_filename, "w", encoding="utf-8", errors="ignore") as f:
-            f.write(protected_code)
-
-        with open(output_filename, "rb") as f:
-            bot.send_document(
-                message.chat.id, 
-                f, 
-                caption=f"✅ **কোডটি সফলভাবে প্রটেক্ট করা হয়েছে!**\n🛡️ *By @NIROB_GX_LEADER*",
-                reply_markup=get_main_keyboard(user_id),
-                parse_mode="Markdown"
-            )
-
-        if os.path.exists(output_filename):
-            os.remove(output_filename)
-        bot.delete_message(message.chat.id, msg.message_id)
-    else:
-        bot.reply_to(message, "💡 প্রটেক্ট করতে আপনার `.html` ফাইল আপলোড করুন।", reply_markup=get_main_keyboard(user_id))
-
-if __name__ == "__main__":
-    print("Bot is running cleanly...")
-    bot.polling(none_stop=True)
+if __name__ == '__main__':
+    keep_alive()
+    print("Elite Security Bot started successfully...")
+    bot.remove_webhook()
+    bot.infinity_polling(skip_pending=True)
